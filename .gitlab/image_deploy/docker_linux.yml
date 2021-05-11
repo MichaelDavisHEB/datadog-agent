@@ -29,8 +29,9 @@
 .if_not_run_all_builds: &if_not_run_all_builds
   if: $CI_COMMIT_BRANCH != "master" && $DEPLOY_AGENT != "true" && $RUN_ALL_BUILDS != "true"
 
-dev_branch_docker_hub-a6:
-  extends: .docker_tag_job_definition
+dev_branch-a6:
+  extends: .docker_job_definition
+  stage: image_deploy
   rules:
     - <<: *if_version_6
       when: manual
@@ -39,12 +40,20 @@ dev_branch_docker_hub-a6:
     - docker_build_agent6
     - docker_build_agent6_jmx
     - docker_build_agent6_py2py3_jmx
-  script:
-    - inv -e docker.publish --signed-push ${SRC_AGENT}:${SRC_TAG}-6-amd64             datadog/agent-dev:${CI_COMMIT_REF_SLUG}
-    - inv -e docker.publish --signed-push ${SRC_AGENT}:${SRC_TAG}-6-amd64             datadog/agent-dev:${CI_COMMIT_REF_SLUG}-py2
-    - inv -e docker.publish --signed-push ${SRC_AGENT}:${SRC_TAG}-6-jmx-amd64         datadog/agent-dev:${CI_COMMIT_REF_SLUG}-jmx
-    - inv -e docker.publish --signed-push ${SRC_AGENT}:${SRC_TAG}-6-jmx-amd64         datadog/agent-dev:${CI_COMMIT_REF_SLUG}-py2-jmx
-    - inv -e docker.publish --signed-push ${SRC_AGENT}:${SRC_TAG}-6-py2py3-jmx-amd64  datadog/agent-dev:${CI_COMMIT_REF_SLUG}-py2py3-jmx
+  trigger:
+    project: DataDog/public-images
+    branch: main
+    strategy: depend
+  variables:
+    IMG_REGISTRIES: dev
+  parallel:
+    matrix:
+      - IMG_SOURCES: ${SRC_AGENT}:v${CI_PIPELINE_ID}-${CI_COMMIT_SHORT_SHA}-6-amd64
+        IMG_DESTINATIONS: agent-dev:${CI_COMMIT_REF_SLUG},agent-dev:${CI_COMMIT_REF_SLUG}-py2
+      - IMG_SOURCES: ${SRC_AGENT}:v${CI_PIPELINE_ID}-${CI_COMMIT_SHORT_SHA}-6-jmx-amd64
+        IMG_DESTINATIONS: agent-dev:${CI_COMMIT_REF_SLUG}-jmx,agent-dev:${CI_COMMIT_REF_SLUG}-py2-jmx
+      - IMG_SOURCES: ${SRC_AGENT}:v${CI_PIPELINE_ID}-${CI_COMMIT_SHORT_SHA}-6-py2py3-jmx-amd64
+        IMG_DESTINATIONS: agent-dev:${CI_COMMIT_REF_SLUG}-py2py3-jmx
 
 dev_branch_docker_hub-dogstatsd:
   extends: .docker_tag_job_definition
