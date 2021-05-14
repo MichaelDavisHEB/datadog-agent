@@ -76,6 +76,10 @@ func TestChown(t *testing.T) {
 			if testEnvironment == DockerEnvironment {
 				testContainerPath(t, event, "chown.file.container_path")
 			}
+
+			if !validateChownSchema(t, event) {
+				t.Fatal(event.String())
+			}
 		}
 	})
 
@@ -105,6 +109,10 @@ func TestChown(t *testing.T) {
 
 			if testEnvironment == DockerEnvironment {
 				testContainerPath(t, event, "chown.file.container_path")
+			}
+
+			if !validateChownSchema(t, event) {
+				t.Fatal(event.String())
 			}
 		}
 	})
@@ -147,6 +155,10 @@ func TestChown(t *testing.T) {
 			if testEnvironment == DockerEnvironment {
 				testContainerPath(t, event, "chown.file.container_path")
 			}
+
+			if !validateChownSchema(t, event) {
+				t.Fatal(event.String())
+			}
 		}
 	})
 
@@ -177,6 +189,10 @@ func TestChown(t *testing.T) {
 
 			if testEnvironment == DockerEnvironment {
 				testContainerPath(t, event, "chown.file.container_path")
+			}
+
+			if !validateChownSchema(t, event) {
+				t.Fatal(event.String())
 			}
 		}
 	}))
