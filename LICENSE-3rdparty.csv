@@ -139,6 +139,7 @@ core,"github.com/cihub/seelog",BSD-3-Clause
 core,"github.com/clbanning/mxj",MIT
 core,"github.com/cloudfoundry-community/go-cfclient",MIT
 core,"github.com/cobaugh/osrelease",BSD-3-Clause
+core,"github.com/containerd/cgroups",Apache-2.0
 core,"github.com/containerd/cgroups/stats/v1",Apache-2.0
 core,"github.com/containerd/containerd",Apache-2.0
 core,"github.com/containerd/containerd/api/events",Apache-2.0

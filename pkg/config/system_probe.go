@@ -54,6 +54,9 @@ func InitSystemProbeConfig(cfg Config) {
 	cfg.BindEnvAndSetDefault(join(spNS, "internal_profiling.api_key"), "", "DD_SYSTEM_PROBE_INTERNAL_PROFILING_API_KEY", "DD_API_KEY")
 	cfg.BindEnvAndSetDefault(join(spNS, "internal_profiling.env"), "", "DD_SYSTEM_PROBE_INTERNAL_PROFILING_ENV", "DD_ENV")
 
+	cfg.BindEnvAndSetDefault(join(spNS, "gc_memory_pressure"), "", "DD_SYSTEM_PROBE_GC_MEMORY_PRESSURE")
+	cfg.BindEnvAndSetDefault(join(spNS, "gc_memory_threshold"), 0, "DD_SYSTEM_PROBE_GC_MEMORY_THRESHOLD")
+
 	// ebpf general settings
 	cfg.BindEnvAndSetDefault(join(spNS, "bpf_debug"), false)
 	cfg.BindEnvAndSetDefault(join(spNS, "bpf_dir"), defaultSystemProbeBPFDir, "DD_SYSTEM_PROBE_BPF_DIR")

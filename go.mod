@@ -81,7 +81,7 @@ require (
 	github.com/clbanning/mxj v1.8.4
 	github.com/cloudfoundry-community/go-cfclient v0.0.0-20201123235753-4f46d6348a05
 	github.com/cobaugh/osrelease v0.0.0-20181218015638-a93a0a55a249
-	github.com/containerd/cgroups v0.0.0-20210114181951-8a68de567b68
+	github.com/containerd/cgroups v1.0.1
 	github.com/containerd/containerd v1.5.0-beta.4
 	github.com/containerd/typeurl v1.0.1
 	github.com/coreos/go-semver v0.3.0
