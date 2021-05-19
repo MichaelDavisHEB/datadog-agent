@@ -185,6 +185,18 @@ def build_syscall_tester(ctx, build_dir):
     )
     return syscall_tester_exe_file
 
+@task
+def build_embed_syscall_tester(ctx):
+    syscall_tester_bin = build_syscall_tester(ctx, os.path.join(".", "bin"))
+    bundle_files(
+        ctx,
+        [syscall_tester_bin],
+        "bin",
+        "pkg/security/tests/syscall_tester/bindata.go",
+        "syscall_tester",
+        "functionaltests,amd64",
+        False,
+    )
 
 @task
 def build_functional_tests(
@@ -213,18 +225,6 @@ def build_functional_tests(
     if static:
         ldflags += '-extldflags "-static"'
         build_tags += ',osusergo,netgo'
-
-    if arch == "x64":
-        syscall_tester_bin = build_syscall_tester(ctx, os.path.join(".", "bin"))
-        bundle_files(
-            ctx,
-            [syscall_tester_bin],
-            "bin",
-            "pkg/security/tests/syscall_tester/bindata.go",
-            "syscall_tester",
-            "functionaltests,amd64",
-            False,
-        )
 
     bindata_files = glob.glob("pkg/security/tests/schemas/*.json")
     bundle_files(
