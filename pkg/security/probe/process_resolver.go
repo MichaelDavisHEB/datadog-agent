@@ -119,7 +119,7 @@ func (i *InodeInfo) UnmarshalBinary(data []byte) (int, error) {
 }
 
 // ProcessResolverOpts options of resolver
-type ProcessResolverOpts struct {}
+type ProcessResolverOpts struct{}
 
 // ProcessResolver resolved process context
 type ProcessResolver struct {
@@ -147,6 +147,13 @@ type ArgsEnvsPool struct {
 // Get returns a cache entry
 func (a *ArgsEnvsPool) Get() *model.ArgsEnvsCacheEntry {
 	return a.pool.Get().(*model.ArgsEnvsCacheEntry)
+}
+
+// GetFrom returns a new entry with value from the given entry
+func (a *ArgsEnvsPool) GetFrom(event *model.ArgsEnvsEvent) *model.ArgsEnvsCacheEntry {
+	entry := a.Get()
+	*entry = event.ArgsEnvsCacheEntry
+	return entry
 }
 
 // Put returns a cache entry to the pool
@@ -181,7 +188,7 @@ func (p *ProcessResolver) SendStats() error {
 
 // UpdateArgsEnvs updates arguments or environment variables of the given id
 func (p *ProcessResolver) UpdateArgsEnvs(event *model.ArgsEnvsEvent) {
-	entry := p.argsEnvsPool.Get()
+	entry := p.argsEnvsPool.GetFrom(event)
 	if e, found := p.argsEnvsCache.Get(event.ID); found {
 		prevEntry := e.(*model.ArgsEnvsCacheEntry)
 		prevEntry.Next = entry
@@ -311,15 +318,15 @@ func (p *ProcessResolver) insertEntry(pid uint32, entry *model.ProcessCacheEntry
 	p.entryCache[pid] = entry
 
 	_ = p.client.Count(metrics.MetricProcessResolverAdded, 1, []string{}, 1.0)
-		atomic.AddInt64(&p.cacheSize, 1)
+	atomic.AddInt64(&p.cacheSize, 1)
 
-		args, envs := entry.ArgsCacheEntry, entry.EnvsCacheEntry
-		runtime.SetFinalizer(entry, func(obj interface{}) {
-			p.argsEnvsPool.Put(args)
-			p.argsEnvsPool.Put(envs)
+	args, envs := entry.ArgsCacheEntry, entry.EnvsCacheEntry
+	runtime.SetFinalizer(entry, func(obj interface{}) {
+		p.argsEnvsPool.Put(args)
+		p.argsEnvsPool.Put(envs)
 
-			atomic.AddInt64(&p.cacheSize, -1)
-		})
+		atomic.AddInt64(&p.cacheSize, -1)
+	})
 
 	return entry
 }
@@ -797,12 +804,11 @@ func NewProcessResolver(probe *Probe, resolvers *Resolvers, client *statsd.Clien
 		opts:          opts,
 		argsEnvsCache: argsEnvsCache,
 		state:         snapshotting,
-		argsEnvsPool: NewArgsEnvsPool(),
+		argsEnvsPool:  NewArgsEnvsPool(),
 	}, nil
 }
 
 // NewProcessResolverOpts returns a new set of process resolver options
 func NewProcessResolverOpts(cookieCacheSize int) ProcessResolverOpts {
-	return ProcessResolverOpts{
-	}
+	return ProcessResolverOpts{}
 }
