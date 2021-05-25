@@ -17,6 +17,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/dynamic/fake"
 	kscheme "k8s.io/client-go/kubernetes/scheme"
 )
@@ -107,7 +108,7 @@ type kubeApiserverFixture struct {
 	expectReport *compliance.Report
 }
 
-func newMyObj(namespace, name string) *MyObj {
+func newMyObj(namespace, name, uid string) *MyObj {
 	return &MyObj{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "MyObj",
@@ -116,6 +117,7 @@ func newMyObj(namespace, name string) *MyObj {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
+			UID:       types.UID(uid),
 		},
 		Spec: MyObjSpec{
 			StringAttribute: "foo",
@@ -147,6 +149,7 @@ func (f *kubeApiserverFixture) run(t *testing.T) {
 	reports := kubeCheck.check(env)
 	assert.Equal(f.expectReport.Passed, reports[0].Passed)
 	assert.Equal(f.expectReport.Data, reports[0].Data)
+	assert.Equal(f.expectReport.Resource, reports[0].Resource)
 	if f.expectReport.Error != nil {
 		assert.EqualError(reports[0].Error, f.expectReport.Error.Error())
 	}
@@ -169,7 +172,7 @@ func TestKubeApiserverCheck(t *testing.T) {
 				Condition: `kube.resource.jq(".spec.stringAttribute") == "foo"`,
 			},
 			objects: []runtime.Object{
-				newMyObj("testns", "dummy1"),
+				newMyObj("testns", "dummy1", "100"),
 			},
 			expectReport: &compliance.Report{
 				Passed: true,
@@ -179,6 +182,10 @@ func TestKubeApiserverCheck(t *testing.T) {
 					compliance.KubeResourceFieldKind:      "MyObj",
 					compliance.KubeResourceFieldVersion:   "v1",
 					compliance.KubeResourceFieldGroup:     "mygroup.com",
+				},
+				Resource: compliance.ReportResource{
+					ID:   "100",
+					Type: "kube_myobj",
 				},
 			},
 		},
@@ -198,8 +205,8 @@ func TestKubeApiserverCheck(t *testing.T) {
 				Condition: `kube.resource.jq(".spec.stringAttribute") != "foo"`,
 			},
 			objects: []runtime.Object{
-				newMyObj("testns", "dummy1"),
-				newMyObj("testns2", "dummy1"),
+				newMyObj("testns", "dummy1", "102"),
+				newMyObj("testns2", "dummy1", "103"),
 			},
 			expectReport: &compliance.Report{
 				Passed: false,
@@ -209,6 +216,10 @@ func TestKubeApiserverCheck(t *testing.T) {
 					compliance.KubeResourceFieldKind:      "MyObj",
 					compliance.KubeResourceFieldVersion:   "v1",
 					compliance.KubeResourceFieldGroup:     "mygroup.com",
+				},
+				Resource: compliance.ReportResource{
+					ID:   "102",
+					Type: "kube_myobj",
 				},
 			},
 		},
@@ -227,9 +238,9 @@ func TestKubeApiserverCheck(t *testing.T) {
 				Condition: `kube.resource.jq(".spec.stringAttribute") == "foo"`,
 			},
 			objects: []runtime.Object{
-				newMyObj("testns", "dummy1"),
-				newMyObj("testns", "dummy2"),
-				newMyObj("testns2", "dummy1"),
+				newMyObj("testns", "dummy1", "104"),
+				newMyObj("testns", "dummy2", "105"),
+				newMyObj("testns2", "dummy1", "106"),
 			},
 			expectReport: &compliance.Report{
 				Passed: true,
@@ -239,6 +250,10 @@ func TestKubeApiserverCheck(t *testing.T) {
 					compliance.KubeResourceFieldKind:      "MyObj",
 					compliance.KubeResourceFieldVersion:   "v1",
 					compliance.KubeResourceFieldGroup:     "mygroup.com",
+				},
+				Resource: compliance.ReportResource{
+					ID:   "104",
+					Type: "kube_myobj",
 				},
 			},
 		},
@@ -258,8 +273,8 @@ func TestKubeApiserverCheck(t *testing.T) {
 				Condition: `kube.resource.jq(".spec.stringAttribute") == "foo"`,
 			},
 			objects: []runtime.Object{
-				newMyObj("testns", "dummy1"),
-				newMyObj("testns2", "dummy1"),
+				newMyObj("testns", "dummy1", "107"),
+				newMyObj("testns2", "dummy1", "108"),
 			},
 			expectReport: &compliance.Report{
 				Passed: true,
@@ -269,6 +284,10 @@ func TestKubeApiserverCheck(t *testing.T) {
 					compliance.KubeResourceFieldKind:      "MyObj",
 					compliance.KubeResourceFieldVersion:   "v1",
 					compliance.KubeResourceFieldGroup:     "mygroup.com",
+				},
+				Resource: compliance.ReportResource{
+					ID:   "107",
+					Type: "kube_myobj",
 				},
 			},
 		},
@@ -288,8 +307,8 @@ func TestKubeApiserverCheck(t *testing.T) {
 				Condition: `kube.resource.jq(".spec.structAttribute.name") == "nestedFoo" && kube.resource.jq(".spec.boolAttribute") == "true" && kube.resource.jq(".spec.listAttribute.[0]") == "listFoo"`,
 			},
 			objects: []runtime.Object{
-				newMyObj("testns", "dummy1"),
-				newMyObj("testns", "dummy2"),
+				newMyObj("testns", "dummy1", "109"),
+				newMyObj("testns", "dummy2", "110"),
 			},
 			expectReport: &compliance.Report{
 				Passed: true,
@@ -299,6 +318,10 @@ func TestKubeApiserverCheck(t *testing.T) {
 					compliance.KubeResourceFieldKind:      "MyObj",
 					compliance.KubeResourceFieldVersion:   "v1",
 					compliance.KubeResourceFieldGroup:     "mygroup.com",
+				},
+				Resource: compliance.ReportResource{
+					ID:   "109",
+					Type: "kube_myobj",
 				},
 			},
 		},
@@ -318,7 +341,7 @@ func TestKubeApiserverCheck(t *testing.T) {
 				Condition: `kube.resource.jq(".spec.stringAttribute") == "foo"`,
 			},
 			objects: []runtime.Object{
-				newMyObj("testns", "dummy2"),
+				newMyObj("testns", "dummy2", "111"),
 			},
 			expectReport: &compliance.Report{
 				Passed: false,
@@ -341,7 +364,7 @@ func TestKubeApiserverCheck(t *testing.T) {
 				Condition: `kube.resource.jq(".spec.DoesNotExist") == "foo"`,
 			},
 			objects: []runtime.Object{
-				newMyObj("testns", "dummy1"),
+				newMyObj("testns", "dummy1", "112"),
 			},
 			expectReport: &compliance.Report{
 				Passed: false,
@@ -351,6 +374,10 @@ func TestKubeApiserverCheck(t *testing.T) {
 					compliance.KubeResourceFieldKind:      "MyObj",
 					compliance.KubeResourceFieldVersion:   "v1",
 					compliance.KubeResourceFieldGroup:     "mygroup.com",
+				},
+				Resource: compliance.ReportResource{
+					ID:   "112",
+					Type: "kube_myobj",
 				},
 			},
 		},
@@ -370,7 +397,7 @@ func TestKubeApiserverCheck(t *testing.T) {
 				Condition: `kube.resource.jq(".spec[@@@]") == "foo"`,
 			},
 			objects: []runtime.Object{
-				newMyObj("testns", "dummy1"),
+				newMyObj("testns", "dummy1", "113"),
 			},
 			expectReport: &compliance.Report{
 				Passed: false,
@@ -392,8 +419,8 @@ func TestKubeApiserverCheck(t *testing.T) {
 				Condition: `kube.resource.namespace != "testns2" || kube.resource.jq(".spec.stringAttribute") == "foo"`,
 			},
 			objects: []runtime.Object{
-				newMyObj("testns", "dummy1"),
-				newMyObj("testns2", "dummy1"),
+				newMyObj("testns", "dummy1", "114"),
+				newMyObj("testns2", "dummy1", "115"),
 			},
 			expectReport: &compliance.Report{
 				Passed: true,
@@ -403,6 +430,10 @@ func TestKubeApiserverCheck(t *testing.T) {
 					compliance.KubeResourceFieldKind:      "MyObj",
 					compliance.KubeResourceFieldVersion:   "v1",
 					compliance.KubeResourceFieldGroup:     "mygroup.com",
+				},
+				Resource: compliance.ReportResource{
+					ID:   "114",
+					Type: "kube_myobj",
 				},
 			},
 		},
