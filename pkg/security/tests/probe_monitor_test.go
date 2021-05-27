@@ -122,7 +122,7 @@ func TestTruncatedParentsMap(t *testing.T) {
 }
 
 func TestTruncatedParentsERPC(t *testing.T) {
-	truncatedParents(t, testOpts{})
+	truncatedParents(t, testOpts{disableMapDentryResolution: true})
 }
 
 func TestNoisyProcess(t *testing.T) {
