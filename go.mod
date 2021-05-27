@@ -164,6 +164,7 @@ require (
 	github.com/twmb/murmur3 v1.1.3
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/urfave/negroni v1.0.0
+	github.com/vektra/mockery/v2 v2.7.5
 	github.com/vishvananda/netlink v1.1.1-0.20210508154835-66ddd91f7ddd
 	github.com/vishvananda/netns v0.0.0-20210104183010-2eb08e3e575f
 	github.com/vito/go-sse v1.0.0 // indirect

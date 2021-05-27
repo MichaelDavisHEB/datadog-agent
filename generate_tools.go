@@ -14,5 +14,6 @@ import (
 	_ "github.com/mailru/easyjson/easyjson"
 	_ "github.com/shuLhan/go-bindata/cmd/go-bindata"
 	_ "github.com/tinylib/msgp"
+	_ "github.com/vektra/mockery/v2"
 	_ "golang.org/x/tools/cmd/stringer"
 )
